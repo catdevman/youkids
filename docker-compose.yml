@@ -1,0 +1,43 @@
+services:
+  youkids:
+    image: ghcr.io/catdevman/youkids:latest
+    # Uncomment to build locally instead of pulling from GHCR:
+    # build: .
+    container_name: youkids
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      - TZ=America/New_York
+      # Optional: protect the parent Web UI with HTTP Basic Auth (any username + this password)
+      - YOUKIDS_PASSWORD=changeme
+      # Base URL used in push notification links back to the Review Queue
+      - YOUKIDS_BASE_URL=http://localhost:8090
+      # Default midnight daily sync (also editable in the Web UI Settings tab)
+      - YOUKIDS_SYNC_CRON=0 0 * * *
+      # Optional: Plex sidecar integration (also editable in the Web UI Settings tab)
+      - YOUKIDS_PLEX_URL=http://plex:32400
+      - YOUKIDS_PLEX_TOKEN=
+      - YOUKIDS_PLEX_SECTION_ID=
+      # Optional: mount a Netscape-format cookies.txt if YouTube requires sign-in for some videos
+      # - YOUKIDS_COOKIES_FILE=/data/cookies.txt
+    volumes:
+      # SQLite database and app state
+      - ./data:/data
+      # Shared media folder — mount this exact same folder into your Plex "Other Videos" library
+      - ./media/kids-youtube:/media
+
+  # Example Plex sidecar (uncomment if running Plex in the same compose stack)
+  # plex:
+  #   image: lscr.io/linuxserver/plex:latest
+  #   container_name: plex
+  #   network_mode: host
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=America/New_York
+  #     - VERSION=docker
+  #   volumes:
+  #     - ./plex-config:/config
+  #     - ./media/kids-youtube:/data/kids-youtube
+  #   restart: unless-stopped

@@ -1,0 +1,7 @@
+/youkids
+/data/
+/media/
+*.db
+*.db-shm
+*.db-wal
+.env
