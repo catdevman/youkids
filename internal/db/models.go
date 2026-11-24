@@ -73,6 +73,7 @@ type Settings struct {
 	PlexURL       string `json:"plex_url"`
 	PlexToken     string `json:"plex_token"`
 	PlexSectionID string `json:"plex_section_id"`
+	PlexLabels    string `json:"plex_labels"`
 
 	// Push notifications
 	NotifyNtfyURL           string `json:"notify_ntfy_url"`

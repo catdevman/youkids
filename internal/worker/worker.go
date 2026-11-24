@@ -240,6 +240,9 @@ func (m *Manager) SyncAll(ctx context.Context) (*SyncSummary, error) {
 	}
 	summary.Pruned = pruned
 
+	// Catch any unlabeled items already indexed in Plex.
+	m.applyPlexLabels(ctx, cfg)
+
 	return summary, nil
 }
 
@@ -666,7 +669,37 @@ func (m *Manager) refreshPlex(ctx context.Context) {
 	}
 	if err := m.plex.RefreshLibrary(ctx, cfg.PlexURL, cfg.PlexToken, cfg.PlexSectionID); err != nil {
 		m.logger.Warn("plex library refresh failed", "err", err)
-	} else {
-		m.logger.Info("triggered plex library refresh", "section", cfg.PlexSectionID)
+		return
+	}
+	m.logger.Info("triggered plex library refresh", "section", cfg.PlexSectionID)
+
+	if cfg.PlexSectionID != "" && len(plex.ParseLabels(cfg.PlexLabels)) > 0 {
+		// Give Plex a few seconds to index newly downloaded files, then apply labels.
+		go func(c db.Settings) {
+			select {
+			case <-m.stopCh:
+				return
+			case <-time.After(8 * time.Second):
+			}
+			m.applyPlexLabels(context.Background(), c)
+		}(cfg)
+	}
+}
+
+func (m *Manager) applyPlexLabels(ctx context.Context, cfg db.Settings) {
+	if m.plex == nil || cfg.PlexURL == "" || cfg.PlexToken == "" || cfg.PlexSectionID == "" {
+		return
+	}
+	labels := plex.ParseLabels(cfg.PlexLabels)
+	if len(labels) == 0 {
+		return
+	}
+	n, err := m.plex.ApplyLabelsToSection(ctx, cfg.PlexURL, cfg.PlexToken, cfg.PlexSectionID, labels)
+	if err != nil {
+		m.logger.Warn("plex auto-label failed", "err", err)
+		return
+	}
+	if n > 0 {
+		m.logger.Info("applied plex labels", "section", cfg.PlexSectionID, "labels", labels, "updated", n)
 	}
 }

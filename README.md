@@ -52,5 +52,6 @@ go run ./cmd/youkids
 | `YOUKIDS_PLEX_URL` | *(empty)* | Plex server URL, e.g. `http://plex:32400` |
 | `YOUKIDS_PLEX_TOKEN` | *(empty)* | Plex `X-Plex-Token` |
 | `YOUKIDS_PLEX_SECTION_ID` | *(empty)* | Plex library section ID (blank = refresh all) |
+| `YOUKIDS_PLEX_LABELS` | *(empty)* | Comma-separated Plex labels to auto-apply & lock on videos (e.g. `Kids`) |
 | `YOUKIDS_YTDLP_BIN` | `yt-dlp` | Path to `yt-dlp` binary |
 | `YOUKIDS_COOKIES_FILE` | *(empty)* | Optional Netscape cookies file passed to `yt-dlp` |

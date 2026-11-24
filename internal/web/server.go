@@ -120,6 +120,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("PUT /api/settings", s.handleSaveSettings)
 	s.mux.HandleFunc("POST /api/plex/sections", s.handlePlexSections)
 	s.mux.HandleFunc("POST /api/plex/refresh", s.handlePlexRefresh)
+	s.mux.HandleFunc("POST /api/plex/apply-labels", s.handlePlexApplyLabels)
 	s.mux.HandleFunc("POST /api/notifications/test", s.handleTestNotifications)
 
 	// Embedded UI
@@ -600,6 +601,45 @@ func (s *Server) handlePlexRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "refreshed"})
+}
+
+func (s *Server) handlePlexApplyLabels(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		PlexURL       string `json:"plex_url"`
+		PlexToken     string `json:"plex_token"`
+		PlexSectionID string `json:"plex_section_id"`
+		PlexLabels    string `json:"plex_labels"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	cfg, _ := s.store.GetSettings(r.Context(), s.defaults)
+	if req.PlexURL == "" {
+		req.PlexURL = cfg.PlexURL
+	}
+	if req.PlexToken == "" {
+		req.PlexToken = cfg.PlexToken
+	}
+	if req.PlexSectionID == "" {
+		req.PlexSectionID = cfg.PlexSectionID
+	}
+	if req.PlexLabels == "" {
+		req.PlexLabels = cfg.PlexLabels
+	}
+
+	if req.PlexURL == "" || req.PlexToken == "" || req.PlexSectionID == "" {
+		writeError(w, http.StatusBadRequest, "Plex URL, token, and Library Section ID are required")
+		return
+	}
+	labels := plex.ParseLabels(req.PlexLabels)
+	if len(labels) == 0 {
+		writeError(w, http.StatusBadRequest, "at least one label (e.g. Kids) is required")
+		return
+	}
+	updated, err := s.plex.ApplyLabelsToSection(r.Context(), req.PlexURL, req.PlexToken, req.PlexSectionID, labels)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"updated": updated, "labels": labels})
 }
 
 func (s *Server) handleTestNotifications(w http.ResponseWriter, r *http.Request) {

@@ -18,6 +18,7 @@ type Config struct {
 	PlexURL       string
 	PlexToken     string
 	PlexSectionID string
+	PlexLabels    string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -37,6 +38,7 @@ func Load() Config {
 		PlexURL:       os.Getenv("YOUKIDS_PLEX_URL"),
 		PlexToken:     os.Getenv("YOUKIDS_PLEX_TOKEN"),
 		PlexSectionID: os.Getenv("YOUKIDS_PLEX_SECTION_ID"),
+		PlexLabels:    os.Getenv("YOUKIDS_PLEX_LABELS"),
 	}
 }
 

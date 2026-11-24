@@ -36,6 +36,7 @@ func main() {
 	defer store.Close()
 
 	defaults := db.DefaultSettings(cfg.SyncCron, cfg.BaseURL, cfg.PlexURL, cfg.PlexToken, cfg.PlexSectionID)
+	defaults.PlexLabels = cfg.PlexLabels
 	yt := ytdlp.NewRunner(cfg.YTDLPBin, cfg.CookiesFile)
 	plexClient := plex.NewClient()
 	notifier := notify.NewNotifier()

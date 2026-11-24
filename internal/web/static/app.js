@@ -397,6 +397,7 @@ function readSettingsForm() {
     plex_url: str("plex_url"),
     plex_token: str("plex_token"),
     plex_section_id: str("plex_section_id"),
+    plex_labels: str("plex_labels"),
     notify_ntfy_url: str("notify_ntfy_url"),
     notify_ntfy_topic: str("notify_ntfy_topic"),
     notify_ntfy_token: str("notify_ntfy_token"),
@@ -449,6 +450,24 @@ document.getElementById("refreshPlexBtn").addEventListener("click", async () => 
     showToast("Triggered Plex library refresh!", "success");
   } catch (err) {
     showToast(err.message, "error");
+  }
+});
+
+document.getElementById("applyPlexLabelsBtn").addEventListener("click", async () => {
+  const cfg = readSettingsForm();
+  try {
+    const res = await api("/api/plex/apply-labels", {
+      method: "POST",
+      body: JSON.stringify({
+        plex_url: cfg.plex_url,
+        plex_token: cfg.plex_token,
+        plex_section_id: cfg.plex_section_id,
+        plex_labels: cfg.plex_labels,
+      }),
+    });
+    showToast(`Applied label(s) [${res.labels.join(", ")}] to ${res.updated} video(s)!`, "success");
+  } catch (err) {
+    showToast("Plex label error: " + err.message, "error");
   }
 });
 
